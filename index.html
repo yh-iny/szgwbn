@@ -623,9 +623,10 @@
                 <div class="form-row">
                     <span class="form-label">套餐月数</span>
                     <div class="input-wrap">
-                        <input type="number" id="planMonths" value="36" min="1" max="120" step="1" />
+                        <input type="number" id="planMonths" value="0" min="0" max="120" step="1" />
                         <span class="unit">月</span>
                     </div>
+                    <button class="quick-btn" id="resetPlanBtn" type="button">重置</button>
                 </div>
             </div>
 
@@ -705,6 +706,7 @@
         const totalMonthsEl = document.getElementById('totalMonths');
 
         const todayBtn = document.getElementById('todayBtn');
+        const resetPlanBtn = document.getElementById('resetPlanBtn');
 
         // ============================================================
         //  工具函数
@@ -861,7 +863,8 @@
 
         function calculate() {
             // 1. 读取输入
-            const planMonths = parseInt(planMonthsInput.value) || 36;
+            const parsedPlanMonths = parseInt(planMonthsInput.value, 10);
+            const planMonths = Number.isNaN(parsedPlanMonths) ? 0 : Math.max(0, parsedPlanMonths);
             const startDate = parseDateInput(startDateInput.value);
 
             // 2. 如果没有开通日期，用今天
@@ -971,6 +974,10 @@
         // 支持实时输入
         planMonthsInput.addEventListener('change', calculate);
 
+        resetPlanBtn.addEventListener('click', function() {
+            window.location.reload();
+        });
+
         // "今天" 按钮
         todayBtn.addEventListener('click', function() {
             const today = getToday();
@@ -993,13 +1000,8 @@
             // 默认开通日期 = 今天
             startDateInput.value = toDateInputValue(today);
 
-            // 默认添加第一条暂停记录：开始 = 今天 + 1个月，持续 7天
-            const defaultPauseStart = addMonthsDays(today, 1, 0);
-            const defaultPauseEnd = addMonthsDays(defaultPauseStart, 0, 7);
-            addPauseRecord(
-                toDateInputValue(defaultPauseStart),
-                toDateInputValue(defaultPauseEnd)
-            );
+            // 默认添加一条空白暂停记录，由用户填写暂停开始和复机日期
+            addPauseRecord();
 
             // 执行首次计算
             calculate();
